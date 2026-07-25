@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>דשבורד סקר בלייב</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; text-align: center; color: #1c1e21; }
+    .container { max-width: 550px; margin: 30px auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    h2 { margin-bottom: 5px; }
+    .counter { font-size: 1.1rem; color: #606770; margin-bottom: 25px; }
+    .chart-box { position: relative; margin: 0 auto 25px auto; }
+    .btn-group { display: flex; gap: 10px; justify-content: center; }
+    .btn { border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
+    .btn-refresh { background-color: #1877f2; color: white; }
+    .btn-refresh:hover { background-color: #166fe5; }
+    .btn-reset { background-color: #e4e6eb; color: #4b4f56; }
+    .btn-reset:hover { background-color: #fa3e3e; color: white; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📊 תוצאות הסקר בזמן אמת</h2>
+    <div class="counter">סך הכל קולות: <strong id="totalCount">0</strong></div>
+
+    <div class="chart-box">
+      <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-refresh" onclick="fetchData()">🔄 רענן עכשיו</button>
+      <button class="btn btn-reset" onclick="resetPoll()">🗑️ איפוס סקר</button>
+    </div>
+  </div>
+
+  <script>
+    // 🔗 הדבק כאן את הקישור שעתקת מ-Apps Script מגוגל:
+    const API_URL = "https://script.google.com/macros/s/AKfycbxxSH5cGYTOtXnXnUVZa-ebc2kMOgL_3wFi7QDRcpH6x083AZpLTKxLp9UbAPacnRz9/exec?phone=[ApiPhone]&val=[ApiVal]";
+
+    let chartInstance = null;
+
+    async function fetchData() {
+      try {
+        const response = await fetch(`${API_URL}?action=getData`);
+        const rows = await response.json();
+        
+        // הורדת שורת הכותרות
+        const dataRows = rows.slice(1);
+        document.getElementById('totalCount').innerText = dataRows.length;
+
+        // ניתוח הצבעות
+        const votes = {};
+        dataRows.forEach(row => {
+          const choice = row[2] || "לא ידוע";
+          votes[choice] = (votes[choice] || 0) + 1;
+        });
+
+        const labels = Object.keys(votes).map(key => `תשובה ${key}`);
+        const values = Object.values(votes);
+
+        renderChart(labels, values);
+      } catch (err) {
+        console.error("שגיאה בטעינת נתונים:", err);
+      }
+    }
+
+    function renderChart(labels, values) {
+      const ctx = document.getElementById('myChart').getContext('2d');
+      
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: ['#1877f2', '#42b72a', '#f7b928', '#fa3e3e', '#8b5cf6']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    async function resetPoll() {
+      if (!confirm("האם אתה בטוח שברצונך למחוק את כל נתוני הסקר?")) return;
+
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "reset" })
+      });
+
+      alert("הסקר אופס בהצלחה!");
+      fetchData();
+    }
+
+    // טעינה ראשונית + רענון אוטומטי כל 5 שניות
+    fetchData();
+    setInterval(fetchData, 5000);
+  </script>
+</body>
+</html>
