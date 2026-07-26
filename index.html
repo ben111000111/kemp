@@ -6,102 +6,126 @@
   <title>דשבורד סקר בלייב</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; text-align: center; color: #1c1e21; }
-    .container { max-width: 550px; margin: 30px auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-    h2 { margin-bottom: 5px; }
-    .counter { font-size: 1.1rem; color: #606770; margin-bottom: 25px; }
-    .chart-box { position: relative; margin: 0 auto 25px auto; }
-    .btn-group { display: flex; gap: 10px; justify-content: center; }
-    .btn { border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
-    .btn-refresh { background-color: #1877f2; color: white; }
-    .btn-refresh:hover { background-color: #166fe5; }
-    .btn-reset { background-color: #e4e6eb; color: #4b4f56; }
-    .btn-reset:hover { background-color: #fa3e3e; color: white; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; width: 100%; max-width: 500px; padding: 30px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; color: #f1f5f9; }
+    .status-bar { display: inline-flex; align-items: center; gap: 8px; background: #0f172a; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; color: #38bdf8; margin-bottom: 20px; border: 1px solid #1e293b; }
+    .pulse { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .total-box { margin-bottom: 20px; }
+    .total-number { font-size: 2.5rem; font-weight: 800; color: #38bdf8; }
+    .total-label { font-size: 0.9rem; color: #94a3b8; }
+    .chart-container { position: relative; margin: 0 auto 25px auto; width: 100%; max-width: 280px; }
+    .actions { display: flex; gap: 10px; justify-content: center; }
+    .btn { border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; width: 100%; }
+    .btn-reset { background: #ef4444; color: white; }
+    .btn-reset:hover { background: #dc2626; transform: translateY(-1px); }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>📊 תוצאות הסקר בזמן אמת</h2>
-    <div class="counter">סך הכל קולות: <strong id="totalCount">0</strong></div>
-
-    <div class="chart-box">
-      <canvas id="myChart"></canvas>
+  <div class="card">
+    <h1>📊 תוצאות הסקר בזמן אמת</h1>
+    
+    <div class="status-bar">
+      <span class="pulse"></span> מתעדכן בלייב (כל שנייה)
     </div>
 
-    <div class="btn-group">
-      <button class="btn btn-refresh" onclick="fetchData()">🔄 רענן עכשיו</button>
-      <button class="btn btn-reset" onclick="resetPoll()">🗑️ איפוס סקר</button>
+    <div class="total-box">
+      <div class="total-number" id="totalVotes">0</div>
+      <div class="total-label">סך הכל מצביעים</div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="pollChart"></canvas>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-reset" onclick="resetData()">🗑️ איפוס סקר</button>
     </div>
   </div>
 
   <script>
-    // 🔗 הדבק כאן את הקישור שעתקת מ-Apps Script מגוגל:
-    const API_URL = "https://script.google.com/macros/s/AKfycbxxSH5cGYTOtXnXnUVZa-ebc2kMOgL_3wFi7QDRcpH6x083AZpLTKxLp9UbAPacnRz9/exec?phone=[ApiPhone]&val=[ApiVal]";
+    // ⚠️ החלף כאן בקישור ה-Web App URL שעתקת מ-Google Apps Script:
+    const API_URL = "https://script.google.com/macros/s/AKfycbyntKp6AEeDrjCcqJDK0-kx3pfij4FLFPUEoPVbPzB-Ny4uwlz8cIO-Cu9_T_Yvq8c/exec";
 
     let chartInstance = null;
 
     async function fetchData() {
       try {
-        const response = await fetch(`${API_URL}?action=getData`);
-        const rows = await response.json();
-        
-        // הורדת שורת הכותרות
-        const dataRows = rows.slice(1);
-        document.getElementById('totalCount').innerText = dataRows.length;
+        const res = await fetch(API_URL);
+        const data = await res.json();
 
-        // ניתוח הצבעות
-        const votes = {};
-        dataRows.forEach(row => {
-          const choice = row[2] || "לא ידוע";
-          votes[choice] = (votes[choice] || 0) + 1;
+        // הסרת שורת הכותרות
+        const rows = data.slice(1);
+        document.getElementById('totalVotes').innerText = rows.length;
+
+        // ספירת קולות לפי תשובות
+        const counts = {};
+        rows.forEach(r => {
+          const val = r[2] || "ללא בחירה";
+          counts[val] = (counts[val] || 0) + 1;
         });
 
-        const labels = Object.keys(votes).map(key => `תשובה ${key}`);
-        const values = Object.values(votes);
+        const labels = Object.keys(counts).map(k => `קבוצה/תשובה ${k}`);
+        const values = Object.values(counts);
 
-        renderChart(labels, values);
-      } catch (err) {
-        console.error("שגיאה בטעינת נתונים:", err);
+        updateChart(labels, values);
+      } catch (e) {
+        console.error("שגיאה בטעינת הנתונים:", e);
       }
     }
 
-    function renderChart(labels, values) {
-      const ctx = document.getElementById('myChart').getContext('2d');
-      
-      if (chartInstance) chartInstance.destroy();
+    function updateChart(labels, values) {
+      const ctx = document.getElementById('pollChart').getContext('2d');
 
-      chartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: ['#1877f2', '#42b72a', '#f7b928', '#fa3e3e', '#8b5cf6']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'bottom' } }
-        }
-      });
+      if (chartInstance) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = values;
+        chartInstance.update('none'); // עדכון חלק ללא אנימציה מעצבנת בכל שנייה
+      } else {
+        chartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: ['#38bdf8', '#4ade80', '#facc15', '#f87171', '#a78bfa'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: '#cbd5e1', font: { family: 'system-ui' } }
+              }
+            },
+            cutout: '70%'
+          }
+        });
+      }
     }
 
-    async function resetPoll() {
-      if (!confirm("האם אתה בטוח שברצונך למחוק את כל נתוני הסקר?")) return;
+    async function resetData() {
+      if (!confirm("האם אתה בטוח שברצונך לאפס את כל נתוני הסקר?")) return;
 
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "reset" })
-      });
-
-      alert("הסקר אופס בהצלחה!");
-      fetchData();
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "reset" })
+        });
+        fetchData();
+      } catch (e) {
+        alert("שגיאה באיפוס הסקר");
+      }
     }
 
-    // טעינה ראשונית + רענון אוטומטי כל 5 שניות
+    // הפעלה ראשונית ורענון בלופ כל שנייה (1000ms)
     fetchData();
-    setInterval(fetchData, 5000);
+    setInterval(fetchData, 1000);
   </script>
 </body>
 </html>
