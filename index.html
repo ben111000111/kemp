@@ -3,87 +3,201 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>דשבורד סקר בלייב</title>
+  <title>דשבורד סקר בזמן אמת</title>
+  
+  <!-- Chart.js להצגת הגרפים -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; width: 100%; max-width: 500px; padding: 30px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
-    h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; color: #f1f5f9; }
-    .status-bar { display: inline-flex; align-items: center; gap: 8px; background: #0f172a; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; color: #38bdf8; margin-bottom: 20px; border: 1px solid #1e293b; }
-    .pulse { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; animation: blink 1.5s infinite; }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .total-box { margin-bottom: 20px; }
-    .total-number { font-size: 2.5rem; font-weight: 800; color: #38bdf8; }
-    .total-label { font-size: 0.9rem; color: #94a3b8; }
-    .chart-container { position: relative; margin: 0 auto 25px auto; width: 100%; max-width: 280px; }
-    .actions { display: flex; gap: 10px; justify-content: center; }
-    .btn { border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; width: 100%; }
-    .btn-reset { background: #ef4444; color: white; }
-    .btn-reset:hover { background: #dc2626; transform: translateY(-1px); }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 550px;
+      padding: 30px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .status-bar {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 25px;
+      text-align: right;
+    }
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .status-title {
+      font-weight: 700;
+      color: #f8fafc;
+      font-size: 1.1rem;
+    }
+    .online-count {
+      color: #22c55e;
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+    .callers-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+      padding-top: 5px;
+    }
+    .phone-tag {
+      background: #0284c7;
+      color: #ffffff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .total-box {
+      margin-bottom: 20px;
+    }
+    .total-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+    .total-label {
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    .chart-container {
+      position: relative;
+      margin: 0 auto 25px auto;
+      width: 100%;
+      max-width: 280px;
+    }
+    .btn-reset {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+    .btn-reset:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <h1>📊 תוצאות הסקר בזמן אמת</h1>
-    
+    <h1>📊 דשבורד סקר בלייב</h1>
+
+    <!-- בר מחוברים בזמן אמת -->
     <div class="status-bar">
-      <span class="pulse"></span> מתעדכן בלייב (כל שנייה)
+      <div class="status-header">
+        <span class="status-title">📞 מחוברים בקו כרגע:</span>
+        <span class="online-count" id="onlineCount">0</span>
+      </div>
+      <div class="callers-tags" id="phoneList">
+        <span style="color: #64748b; font-size: 0.9rem;">אין מאזינים בקו כרגע...</span>
+      </div>
     </div>
 
+    <!-- נתוני הסקר -->
     <div class="total-box">
       <div class="total-number" id="totalVotes">0</div>
-      <div class="total-label">סך הכל מצביעים</div>
+      <div class="total-label">סך הכל הצבעות בסקר</div>
     </div>
 
     <div class="chart-container">
       <canvas id="pollChart"></canvas>
     </div>
 
-    <div class="actions">
-      <button class="btn btn-reset" onclick="resetData()">🗑️ איפוס סקר</button>
-    </div>
+    <button class="btn-reset" onclick="resetAllData()">🗑️ איפוס סקר ומחוברים</button>
   </div>
 
   <script>
-    // ⚠️ החלף כאן בקישור ה-Web App URL שעתקת מ-Google Apps Script:
-    const API_URL = "https://script.google.com/macros/s/AKfycbyntKp6AEeDrjCcqJDK0-kx3pfij4FLFPUEoPVbPzB-Ny4uwlz8cIO-Cu9_T_Yvq8c/exec";
+    // חיבור ל-Firebase של הפרויקט שלך
+    const firebaseConfig = {
+      databaseURL: "https://pool-8c1b7-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     let chartInstance = null;
 
-    async function fetchData() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
+    // 1. האזנה בזמן אמת למאזינים מחוברים בשיחה
+    db.ref('online').on('value', snapshot => {
+      const data = snapshot.val() || {};
+      const phones = Object.keys(data);
 
-        // הסרת שורת הכותרות
-        const rows = data.slice(1);
-        document.getElementById('totalVotes').innerText = rows.length;
+      document.getElementById('onlineCount').innerText = phones.length;
+      const phoneListDiv = document.getElementById('phoneList');
 
-        // ספירת קולות לפי תשובות
-        const counts = {};
-        rows.forEach(r => {
-          const val = r[2] || "ללא בחירה";
-          counts[val] = (counts[val] || 0) + 1;
-        });
-
-        const labels = Object.keys(counts).map(k => `קבוצה/תשובה ${k}`);
-        const values = Object.values(counts);
-
-        updateChart(labels, values);
-      } catch (e) {
-        console.error("שגיאה בטעינת הנתונים:", e);
+      if (phones.length > 0) {
+        phoneListDiv.innerHTML = phones.map(p => `<span class="phone-tag">📱 ${p}</span>`).join('');
+      } else {
+        phoneListDiv.innerHTML = '<span style="color: #64748b; font-size: 0.9rem;">אין מאזינים בקו כרגע...</span>';
       }
-    }
+    });
+
+    // 2. האזנה בזמן אמת להצבעות הסקר
+    db.ref('votes').on('value', snapshot => {
+      const data = snapshot.val() || {};
+      const votes = Object.values(data);
+
+      document.getElementById('totalVotes').innerText = votes.length;
+
+      const counts = {};
+      votes.forEach(v => {
+        const val = v.val || "ללא בחירה";
+        counts[val] = (counts[val] || 0) + 1;
+      });
+
+      const labels = Object.keys(counts).map(k => `תשובה ${k}`);
+      const values = Object.values(counts);
+
+      updateChart(labels, values);
+    });
 
     function updateChart(labels, values) {
       const ctx = document.getElementById('pollChart').getContext('2d');
-
       if (chartInstance) {
         chartInstance.data.labels = labels;
         chartInstance.data.datasets[0].data = values;
-        chartInstance.update('none'); // עדכון חלק ללא אנימציה מעצבנת בכל שנייה
+        chartInstance.update();
       } else {
         chartInstance = new Chart(ctx, {
           type: 'doughnut',
@@ -109,23 +223,13 @@
       }
     }
 
-    async function resetData() {
-      if (!confirm("האם אתה בטוח שברצונך לאפס את כל נתוני הסקר?")) return;
-
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify({ action: "reset" })
-        });
-        fetchData();
-      } catch (e) {
-        alert("שגיאה באיפוס הסקר");
+    // 3. איפוס כל הנתונים בלחיצה
+    function resetAllData() {
+      if (confirm("האם לאפס את כל הנתונים (מחוברים והצבעות)?")) {
+        db.ref('votes').remove();
+        db.ref('online').remove();
       }
     }
-
-    // הפעלה ראשונית ורענון בלופ כל שנייה (1000ms)
-    fetchData();
-    setInterval(fetchData, 1000);
   </script>
 </body>
 </html>
