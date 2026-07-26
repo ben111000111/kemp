@@ -3,192 +3,249 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>דשבורד סקר בזמן אמת</title>
+  <title>🔥 Live Poll Show - דשבורד סקר בזמן אמת</title>
   
-  <!-- Chart.js להצגת הגרפים -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f172a;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #090d16;
       color: #f8fafc;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
+      padding: 15px;
     }
     .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 20px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 24px;
       width: 100%;
-      max-width: 550px;
-      padding: 30px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      max-width: 650px;
+      padding: 25px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
       text-align: center;
     }
     h1 {
-      font-size: 1.6rem;
+      font-size: 1.8rem;
       margin-bottom: 20px;
-      font-weight: 700;
-      color: #f1f5f9;
+      font-weight: 800;
+      background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
+    
+    /* סרגל מחוברים */
     .status-bar {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 14px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 16px;
       padding: 15px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       text-align: right;
     }
     .status-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .status-title {
-      font-weight: 700;
-      color: #f8fafc;
-      font-size: 1.1rem;
-    }
-    .online-count {
-      color: #22c55e;
-      font-size: 1.4rem;
-      font-weight: 800;
+    .online-badge {
+      background: #22c55e22;
+      color: #4ade80;
+      border: 1px solid #22c55e44;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
     }
     .callers-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      max-height: 120px;
+      gap: 6px;
+      max-height: 90px;
       overflow-y: auto;
-      padding-top: 5px;
     }
     .phone-tag {
       background: #0284c7;
-      color: #ffffff;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
       font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
     }
-    .total-box {
+
+    /* גריד סטטיסטיקות ואווירה */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       margin-bottom: 20px;
     }
-    .total-number {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: #38bdf8;
+    .stat-card {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
     }
-    .total-label {
-      font-size: 0.9rem;
-      color: #94a3b8;
-    }
+    .stat-title { font-size: 0.8rem; color: #9ca3af; margin-bottom: 4px; font-weight: 600; }
+    .stat-value { font-size: 1.1rem; font-weight: 800; color: #f3f4f6; }
+    .stat-sub { font-size: 0.75rem; color: #38bdf8; margin-top: 2px; }
+
+    /* גרף */
     .chart-container {
       position: relative;
-      margin: 0 auto 25px auto;
+      margin: 0 auto 20px auto;
       width: 100%;
-      max-width: 280px;
+      max-width: 250px;
     }
+
     .btn-reset {
-      background: #ef4444;
+      background: #dc2626;
       color: white;
       border: none;
-      padding: 12px 20px;
-      border-radius: 10px;
+      padding: 12px;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
-      transition: all 0.2s;
       width: 100%;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      transition: 0.2s;
     }
-    .btn-reset:hover {
-      background: #dc2626;
-      transform: translateY(-1px);
-    }
+    .btn-reset:hover { background: #b91c1c; }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <h1>📊 דשבורד סקר בלייב</h1>
+    <h1>🔥 LIVE POLL SHOW</h1>
 
-    <!-- בר מחוברים בזמן אמת -->
+    <!-- מחוברים בקו -->
     <div class="status-bar">
       <div class="status-header">
-        <span class="status-title">📞 מחוברים בקו כרגע:</span>
-        <span class="online-count" id="onlineCount">0</span>
+        <span style="font-weight: 700; color: #e5e7eb;">📞 מחוברים בשיחה כרגע:</span>
+        <span class="online-badge" id="onlineCount">0 מחוברים</span>
       </div>
       <div class="callers-tags" id="phoneList">
-        <span style="color: #64748b; font-size: 0.9rem;">אין מאזינים בקו כרגע...</span>
+        <span style="color: #6b7280; font-size: 0.85rem;">אין מאזינים כרגע בקו...</span>
       </div>
     </div>
 
-    <!-- נתוני הסקר -->
-    <div class="total-box">
-      <div class="total-number" id="totalVotes">0</div>
-      <div class="total-label">סך הכל הצבעות בסקר</div>
+    <!-- כרטיסיות אווירה ותחרות -->
+    <div class="stats-grid">
+      <div class="stat-card" style="border-color: #eab30844;">
+        <div class="stat-title">⚡ העונה הכי מהיר</div>
+        <div class="stat-value" id="fastestUser" style="color: #facc15;">--</div>
+        <div class="stat-sub" id="fastestTime">ממתין להצבעות</div>
+      </div>
+
+      <div class="stat-card" style="border-color: #a855f744;">
+        <div class="stat-title">🐢 העונה הכי איטי</div>
+        <div class="stat-value" id="slowestUser" style="color: #c084fc;">--</div>
+        <div class="stat-sub" id="slowestTime">ממתין להצבעות</div>
+      </div>
+
+      <div class="stat-card" style="border-color: #22c55e44;">
+        <div class="stat-title">🏆 התשובה המובילה</div>
+        <div class="stat-value" id="topChoice" style="color: #4ade80;">--</div>
+        <div class="stat-sub" id="topCount">0 קולות</div>
+      </div>
+
+      <div class="stat-card" style="border-color: #ef444444;">
+        <div class="stat-title">📉 התשובה החלשה</div>
+        <div class="stat-value" id="lowChoice" style="color: #f87171;">--</div>
+        <div class="stat-sub" id="lowCount">0 קולות</div>
+      </div>
     </div>
 
+    <!-- גרף -->
     <div class="chart-container">
       <canvas id="pollChart"></canvas>
     </div>
 
-    <button class="btn-reset" onclick="resetAllData()">🗑️ איפוס סקר ומחוברים</button>
+    <button class="btn-reset" onclick="resetAll()">🗑️ איפוס נתוני סקר ותחרות</button>
   </div>
 
   <script>
-    // חיבור ל-Firebase של הפרויקט שלך
-    const firebaseConfig = {
-      databaseURL: "https://pool-8c1b7-default-rtdb.firebaseio.com"
-    };
+    const firebaseConfig = { databaseURL: "https://pool-8c1b7-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let chartInstance = null;
+    let onlineUsersMap = {};
 
-    // 1. האזנה בזמן אמת למאזינים מחוברים בשיחה
+    // 1. מעקב מחוברים
     db.ref('online').on('value', snapshot => {
-      const data = snapshot.val() || {};
-      const phones = Object.keys(data);
+      onlineUsersMap = snapshot.val() || {};
+      const phones = Object.keys(onlineUsersMap);
 
-      document.getElementById('onlineCount').innerText = phones.length;
+      document.getElementById('onlineCount').innerText = `${phones.length} מחוברים`;
       const phoneListDiv = document.getElementById('phoneList');
 
       if (phones.length > 0) {
         phoneListDiv.innerHTML = phones.map(p => `<span class="phone-tag">📱 ${p}</span>`).join('');
       } else {
-        phoneListDiv.innerHTML = '<span style="color: #64748b; font-size: 0.9rem;">אין מאזינים בקו כרגע...</span>';
+        phoneListDiv.innerHTML = '<span style="color: #6b7280; font-size: 0.85rem;">אין מאזינים כרגע בקו...</span>';
       }
     });
 
-    // 2. האזנה בזמן אמת להצבעות הסקר
+    // 2. מעקב הצבעות וחישוב מהירות בלייב
     db.ref('votes').on('value', snapshot => {
-      const data = snapshot.val() || {};
-      const votes = Object.values(data);
+      const votesData = snapshot.val() || {};
+      const votesList = Object.values(votesData);
 
-      document.getElementById('totalVotes').innerText = votes.length;
+      if (votesList.length === 0) {
+        resetUI();
+        return;
+      }
 
       const counts = {};
-      votes.forEach(v => {
+      let fastest = { phone: null, speed: Infinity };
+      let slowest = { phone: null, speed: -1 };
+
+      votesList.forEach(v => {
         const val = v.val || "ללא בחירה";
         counts[val] = (counts[val] || 0) + 1;
+
+        // חישוב מהירות תגובה (אם המשתמש מחובר ויש זמן כניסה)
+        if (v.voteTime && onlineUsersMap[v.phone] && onlineUsersMap[v.phone].joinTime) {
+          const speedSec = ((v.voteTime - onlineUsersMap[v.phone].joinTime) / 1000).toFixed(1);
+          if (speedSec > 0) {
+            if (speedSec < fastest.speed) fastest = { phone: v.phone, speed: speedSec };
+            if (speedSec > slowest.speed) slowest = { phone: v.phone, speed: speedSec };
+          }
+        }
       });
 
-      const labels = Object.keys(counts).map(k => `תשובה ${k}`);
-      const values = Object.values(counts);
+      // עדכון מובילים ואיטיים
+      if (fastest.phone) {
+        document.getElementById('fastestUser').innerText = fastest.phone;
+        document.getElementById('fastestTime').innerText = `ענה תוך ${fastest.speed} שניות! ⚡`;
+      }
+      if (slowest.phone) {
+        document.getElementById('slowestUser').innerText = slowest.phone;
+        document.getElementById('slowestTime').innerText = `ענה תוך ${slowest.speed} שניות 🐢`;
+      }
 
+      // חישוב הכי הרבה והכי קצת
+      const sortedChoices = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+      
+      document.getElementById('topChoice').innerText = `תשובה ${sortedChoices[0][0]}`;
+      document.getElementById('topCount').innerText = `${sortedChoices[0][1]} מצביעים`;
+
+      const lastIdx = sortedChoices.length - 1;
+      document.getElementById('lowChoice').innerText = `תשובה ${sortedChoices[lastIdx][0]}`;
+      document.getElementById('lowCount').innerText = `${sortedChoices[lastIdx][1]} מצביעים`;
+
+      // עדכון גרף
+      const labels = sortedChoices.map(item => `תשובה ${item[0]}`);
+      const values = sortedChoices.map(item => item[1]);
       updateChart(labels, values);
     });
 
@@ -205,27 +262,34 @@
             labels: labels,
             datasets: [{
               data: values,
-              backgroundColor: ['#38bdf8', '#4ade80', '#facc15', '#f87171', '#a78bfa'],
+              backgroundColor: ['#38bdf8', '#4ade80', '#facc15', '#c084fc', '#f87171'],
               borderWidth: 0
             }]
           },
           options: {
             responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: { color: '#cbd5e1', font: { family: 'system-ui' } }
-              }
-            },
-            cutout: '70%'
+            plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } },
+            cutout: '65%'
           }
         });
       }
     }
 
-    // 3. איפוס כל הנתונים בלחיצה
-    function resetAllData() {
-      if (confirm("האם לאפס את כל הנתונים (מחוברים והצבעות)?")) {
+    function resetUI() {
+      document.getElementById('fastestUser').innerText = '--';
+      document.getElementById('fastestTime').innerText = 'ממתין להצבעות';
+      document.getElementById('slowestUser').innerText = '--';
+      document.getElementById('slowestTime').innerText = 'ממתין להצבעות';
+      document.getElementById('topChoice').innerText = '--';
+      document.getElementById('topCount').innerText = '0 קולות';
+      document.getElementById('lowChoice').innerText = '--';
+      document.getElementById('lowCount').innerText = '0 קולות';
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = null;
+    }
+
+    function resetAll() {
+      if (confirm("לאפס את כל נתוני התחרות והסקר?")) {
         db.ref('votes').remove();
         db.ref('online').remove();
       }
